@@ -71,3 +71,35 @@ where model in (select model
 					and speed >= all (select speed
 										from pc
 										where ram <= all (select ram from pc)));
+
+use ships;
+
+-- Task 3.1.
+select distinct country
+from classes
+where NUMGUNS >= all (select numguns from classes);
+
+-- Task 3.2.
+select name
+from ships
+where class in (select class from classes where bore = 16);
+
+-- Task 3.3.
+select battle
+from outcomes
+where ship in (select name from ships where class = 'Kongo');
+
+-- Task 3.4.
+select name
+from ships
+where class in (select class 
+				from classes cl1 
+				where numguns >= all (select numguns from classes cl2 where cl1.bore = cl2.bore));
+
+-- another solution
+select name
+from ships s
+join classes c on s.class = c.class
+where numguns >= all (select numguns
+				from classes c2
+				where c2.bore = c.bore);
