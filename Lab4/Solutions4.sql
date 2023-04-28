@@ -12,7 +12,28 @@ from movie
 join starsin on title = movietitle and year = movieyear
 order by studioname;
 
--- ... --
+-- Task 1.3.
+select distinct name
+from movieexec
+join movie on cert# = producerc#
+join starsin on movietitle = title
+where starname = 'Harrison Ford';
+
+-- Task 1.4.
+select distinct starname
+from starsin
+join movie on title = movietitle
+join moviestar on name = starname
+where gender = 'F' and studioname = 'MGM';
+
+-- Task 1.5.
+select name, title
+from movieexec
+join movie on cert# = producerc#
+where name in (select distinct name 
+				from movieexec
+				join movie on cert# = producerc#
+				where title = 'Star Wars')
 
 -- Task 1.6.
 select name
@@ -46,6 +67,11 @@ where model not in (select model from pc) and
 	model		not in (select model from laptop);
 
 use ships;
+
+-- Task 3.1.
+select name, country, numguns, launched 
+from ships
+left join classes on classes.class = ships.class;
 
 -- Task 3.2.
 select ship 
