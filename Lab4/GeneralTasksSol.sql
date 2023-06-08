@@ -56,4 +56,33 @@ select class, country, bore * 2.54 as bore_cm
 from classes
 where numguns in (6, 8, 10);
 
+-- Task 9
+select distinct country
+from classes c1
+where bore != any (select bore from classes c2 where c1.country = c2.country);
 
+-- Task 10
+select distinct country
+from classes
+where numguns >= all (select numguns from classes);
+
+use pc;
+
+-- Task 11
+select *
+from pc
+join product p1 on pc.model = p1.model
+where price < all (select price from laptop 
+					join product p2 on laptop.model = p2.model
+					where p1.maker = p2.maker);
+
+-- Task 12
+select *
+from pc
+join product p1 on pc.model = p1.model
+where price < all (select price from laptop 
+					join product p2 on laptop.model = p2.model
+					where p1.maker = p2.maker)
+and price < all (select price from printer 
+					join product p2 on printer.model = p2.model
+					where p1.maker = p2.maker);
