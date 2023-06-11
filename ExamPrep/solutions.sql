@@ -55,3 +55,85 @@ where ship in (select name from ships
 					group by name
 					having count(*) > 3);
 
+
+/*
+Да се напише изглед, който намира имената на всички актьори, 
+играли във филми с дължина под 120 минути или с неизвестна дължина.
+*/
+use movies;
+
+go
+create view stars
+as
+select distinct starname
+from starsin
+left join movie on movietitle = title and movieyear = year
+where length < 120 or length is null
+go
+select * from stars;
+
+/*
+Да се направи възможно изтриването на редове в изгледа. 
+При изпълнение на delete заявка върху stars 
+да се изтриват съответните редове от starsin.
+*/
+go
+create trigger starDelete
+on stars
+instead of delete
+as
+	delete from starsin
+	where starname in (select starname from deleted);
+go
+drop trigger starDelete;
+drop view stars;
+
+/*
+Да се изтрият всички участия на филмови звезди (редове в StarsIn) във филми, 
+чието заглавие започва със Star, но само ако не са играли във филми, 
+незапочващи със Star.
+*/
+select * from starsin
+where movietitle like 'Star%' 
+		and starname not in (select starname from starsin
+							where movietitle not like 'Star%');
+
+use pc;
+/*
+Да се изтрият всички компютри, произведени от производител, който не
+произвежда цветни принтери. 
+*/
+delete from pc
+where model in (select model from product
+				where maker not in (select maker from printer
+									join product on printer.model = product.model
+									where color = 'y'));
+
+/*
+а) да се създаде изглед, който показва кодовете, моделите, процесорите, 
+RAM паметта, харддиска и цената на всички PC-та и лаптопи. 
+Да има допълнителна колона, която указва типа на продукта - PC или Laptop.
+б) да се направи възможно изпълнението на DELETE заявки върху този изглед
+*/
+go
+create view computers
+as
+	(select code, 'PC' as type, model, speed, ram, hd, price
+	from pc)
+	union
+	(select code, 'Laptop' as type, model, speed, ram, hd, price
+	from laptop);
+go
+
+create trigger deleteComp
+on computers
+instead of delete
+as
+	delete from pc
+	where code in (select code from deleted where type = 'pc');
+
+	delete from laptop
+	where code in (select code from deleted where type = 'laptop');
+go
+drop view computers;
+
