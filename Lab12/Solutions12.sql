@@ -119,7 +119,168 @@ go
 drop trigger tr23;
 
 -- Task 2.4
+go
+create trigger tr24
+on product
+after insert, update
+as
+	if exists (select * from pc p
+				join product on p.model = product.model
+				where maker not in (select maker from laptop
+									join product on laptop.model = product.model
+									where speed >= p.speed))
+	rollback;
+go
+drop trigger tr24;
 
+-- Task 2.5
+go
+create trigger tr25
+on laptop
+after insert, update, delete
+as
+	if exists (select maker from product
+				left join laptop on product.model = laptop.model
+				where type = 'laptop'
+				group by maker
+				having avg(price) < 2000)
+	rollback;
+go
+drop trigger tr25;
 
+-- Task 2.6
+go
+create trigger tr26
+on laptop
+after insert, update
+as
+	if exists (select * from laptop lap
+				where exists (select * from pc p
+								where lap.ram > p.ram and lap.price < p.price))
+	rollback;
+go
+drop trigger tr26;
+
+-- Task 2.7
+go
+create trigger tr27
+on printer
+instead of insert
+as
+	insert into printer
+	select * from inserted
+	where color != 'y' or type != 'Matrix';
+go
+drop trigger tr27;
+
+use ships;
+
+-- Task 3.1
+go
+create trigger tr31
+on classes
+instead of insert 
+as
+	insert into classes
+	select * from inserted
+	where displacement <= 35000;
+
+	insert into classes
+	select class, type, country, numguns, bore, 35000
+	from inserted
+	where displacement > 35000;
+go
+drop trigger tr31
+
+-- Task 3.2
+go
+create view v32
+as
+	select class, count(*) as shipsCount
+	from ships
+	group by class;
+go
+select * from v32;
+
+go
+create trigger tr32
+on v32
+instead of delete
+as
+	delete from outcomes
+	where ship in (select name from ships 
+					where class in (select class from deleted));
+
+	delete from ships
+	where class in (select class from deleted);
+	
+	delete from classes
+	where class in (select class from deleted);
+go
+
+drop trigger tr32;
+drop view v32;
+
+-- Task 3.3
+go
+create trigger tr33
+on ships
+after insert, update
+as
+	if exists (select class from ships
+				group by class
+				having count(*) > 2)
+	rollback;
+go
+drop trigger tr33;
+
+-- Task 3.4
+go
+create trigger tr34
+on outcomes
+after insert, update
+as
+	if exists (select * from outcomes o1
+				join ships on ship = name
+				join classes on ships.class = classes.class
+				where numguns > 9 
+				and exists (select ship from outcomes o2
+							join ships on ship = name
+							join classes on ships.class = classes.class
+							where numguns < 9 and o1.battle = o2.battle))
+	rollback;
+go
+drop trigger tr34;
+
+-- Task 3.5
+go
+create trigger tr351
+on outcomes
+after insert, update
+as
+	if exists (select ship from outcomes o
+				join battles b on name = battle
+				where result = 'sunk' 
+						and ship in (select ship from outcomes
+									join battles bat on name = battle
+									where date > b.date))
+	rollback;
+go
+
+go
+create trigger tr352
+on battles
+after update
+as
+	if exists (select ship from outcomes o
+				join battles b on name = battle
+				where result = 'sunk' 
+						and ship in (select ship from outcomes
+									join battles bat on name = battle
+									where date > b.date))
+	rollback;
+go
+
+drop trigger tr351, tr352;
 
 
